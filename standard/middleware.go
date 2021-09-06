@@ -6,13 +6,15 @@ import (
 	"net/http"
 )
 
+func handleMain(w http.ResponseWriter, r *http.Request) {
+	_, err := w.Write([]byte("{\"message\": \"noice\"}\n"))
+	if err != nil {
+		fmt.Println("error handling main", err.Error())
+	}
+}
+
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write([]byte("{\"message\": \"noice\"}\n"))
-		if err != nil {
-			fmt.Println("error handling main", err.Error())
-		}
-	})
+	http.HandleFunc("/", handleMain)
 
 	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		_, err := w.Write([]byte("{\"message\":\"ok\"}\n"))
