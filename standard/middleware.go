@@ -27,6 +27,26 @@ func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func basicAuth(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if r.URL.Path == "/healthcheck" {
+			h.ServeHTTP(w, r)
+			return
+		}
+
+		user, pass, ok := r.BasicAuth()
+		if !ok || user != "admin" || pass != "admin" {
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprintf(w, `{"error": "Unauthorized"}`)
+			return
+		}
+
+		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+		h.ServeHTTP(w, r)
+	}
+}
+
 func applicationJSON(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -35,7 +55,7 @@ func applicationJSON(h http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
-	http.HandleFunc("/", applicationJSON(handleMain))
+	http.HandleFunc("/", basicAuth(applicationJSON(handleMain)))
 
 	http.HandleFunc("/healthcheck", applicationJSON(handleHealthCheck))
 
