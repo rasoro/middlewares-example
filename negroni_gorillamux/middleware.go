@@ -29,8 +29,16 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func applicationJSON() negroni.Handler {
+	return negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		w.Header().Set("Content-Type", "application/json")
+		next(w, r)
+	})
+}
+
 func main() {
 	n := negroni.Classic()
+	n.Use(applicationJSON())
 
 	r := mux.NewRouter().StrictSlash(true)
 	n.UseHandler(r)
