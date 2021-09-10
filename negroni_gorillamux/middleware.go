@@ -21,7 +21,17 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write(resJSON)
 		if err != nil {
-			fmt.Println("error in handleMain", err.Error())
+			fmt.Printf("error in handleMain: %s", err.Error())
+		}
+	}).Methods("GET")
+
+	r.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+		res := map[string]string{"message": "ok"}
+		resJson, _ := json.Marshal(res)
+		w.WriteHeader(http.StatusOK)
+		_, err := w.Write(resJson)
+		if err != nil {
+			fmt.Printf("error in handleMain: %s", err.Error())
 		}
 	}).Methods("GET")
 
