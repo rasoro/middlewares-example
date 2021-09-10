@@ -36,15 +36,34 @@ func applicationJSON() negroni.Handler {
 	})
 }
 
+func basicAuth() negroni.Handler {
+	return negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		if r.URL.Path == "/healthcheck" {
+			next(w, r)
+			return
+		}
+
+		user, pass, ok := r.BasicAuth()
+		if !ok || user != "admin" || pass != "admin" {
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprintln(w, `{"error": "Unauthorized"}`)
+			return
+		}
+
+		w.Header().Set("WWW-Authenticate", `Basic realm=Restricted`)
+		next(w, r)
+	})
+}
+
 func main() {
 	n := negroni.Classic()
 	n.Use(applicationJSON())
+	n.Use(basicAuth())
 
 	r := mux.NewRouter().StrictSlash(true)
 	n.UseHandler(r)
 
 	r.HandleFunc("/", handleMain).Methods("GET")
-
 	r.HandleFunc("/healthcheck", handleHealth).Methods("GET")
 
 	fmt.Println("server listen at 8090")
