@@ -15,11 +15,27 @@ func applicationJSON(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+func basicAuth(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		r := c.Request()
+		if r.URL.Path == "/healthcheck" {
+			next(c)
+		}
+		user, pass, ok := r.BasicAuth()
+		if !ok || user != "admin" || pass != "admin" {
+			return echo.ErrUnauthorized
+		}
+		c.Response().Header().Set(echo.HeaderWWWAuthenticate, "Basic realm=Restricted")
+		return next(c)
+	}
+}
+
 func main() {
 	e := echo.New()
 
 	e.Use(middleware.Logger())
 	e.Use(applicationJSON)
+	e.Use(basicAuth)
 
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, `{"message": "noice"}`)
